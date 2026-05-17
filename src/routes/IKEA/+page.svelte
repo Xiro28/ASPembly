@@ -34,6 +34,7 @@
 		steps: number[];
 		repetitions: Record<number, number>;
 		commands: RobotCommand[];
+		warnings: string[];
 	}
 
 	interface SceneObj {
@@ -42,59 +43,73 @@
 		meshes: Mesh[];
 		currentPos: Vector3;
 		mat: StandardMaterial;
+		placed: boolean;
 	}
 
-	// ── Default ASP input ─────────────────────────────────────────────────────
-	const DEFAULT_ASP = `% ÄPPLARÖ Bench assembly
-
+	const DEFAULT_ASP = `
+assembly_page(n).
+assembly_page(n).
+assembly_page(y).
 step(1).
 repetition(1,6).
-robot_command(1,1,pick,dowel,table,none,pick_up_one_of_the_6_wooden_dowels).
-robot_command(1,2,move,dowel,table,frame_hole,move_the_dowel_towards_the_pre_drilled_hole_on_the_frame).
-robot_command(1,3,align,dowel,none,frame_hole,align_the_dowel_with_the_hole).
-robot_command(1,4,insert,dowel,none,frame_hole,insert_the_dowel_into_the_hole).
-robot_command(1,5,release,dowel,none,none,release_the_dowel_now_seated_in_the_frame).
-
+orders_incomplete(1,4).
+robot_command(1,1,pick,dowel,table,none,pick_up_one_of_the_6_dowelspart_128832).
+robot_command(1,2,move,dowel,table,hole,move_the_dowel_to_the_pre_drilled_hole_on_the_frame).
+robot_command(1,3,align,dowel,none,none,align_the_dowel_with_the_hole).
+robot_command(1,5,release,dowel,none,none,release_the_dowel_in_the_hole).
+assembly_page(y).
 step(2).
-repetition(2,2).
-robot_command(2,1,pick,side_frame,table,none,pick_up_the_side_frame).
-robot_command(2,2,move,side_frame,table,side_of_table_top,move_the_side_frame_towards_its_end_of_the_seat_panel).
-robot_command(2,3,align,side_frame,none,side_of_table_top,align_the_frame_dowels_with_the_seat_holes).
-robot_command(2,4,insert,side_frame,none,side_of_table_top,push_the_side_frame_onto_the_seat_panel_dowels).
-robot_command(2,5,release,side_frame,none,none,release_the_side_frame).
-
 step(3).
-repetition(3,4).
-robot_command(3,1,pick,screw_long,table,none,pick_up_one_of_the_4_long_hex_bolts).
-robot_command(3,2,move,screw_long,table,screw_hole,move_the_bolt_to_the_corner_hole_on_the_frame).
-robot_command(3,3,align,screw_long,none,screw_hole,align_the_bolt_with_the_hole).
-robot_command(3,4,insert,screw_long,none,screw_hole,insert_the_bolt_into_the_hole).
-robot_command(3,5,pick,allen_key,table,none,pick_up_the_allen_key).
-robot_command(3,6,move,allen_key,table,screw_head,move_the_allen_key_to_the_bolt_head).
-robot_command(3,7,align,allen_key,none,screw_head,align_the_allen_key_with_the_bolt_head).
-robot_command(3,8,rotate,allen_key,none,none,rotate_the_allen_key_to_tighten_the_bolt).
-robot_command(3,9,release,allen_key,none,none,release_the_allen_key).
-
+orders_incomplete(3,2).
+robot_command(2,1,pick,side_frame,table,none,pick_up_the_side_frame).
+robot_command(2,2,move,side_frame,table,main_frame,move_the_side_frame_to_the_main_frame).
+robot_command(2,3,align,side_frame,none,none,align_the_side_frame_with_the_main_frame).
+robot_command(2,4,insert,side_frame,none,main_frame,insert_the_side_frame_into_the_main_frame).
+robot_command(2,5,release,side_frame,none,none,release_the_side_frame_after_it_is_inserted).
+robot_command(3,1,pick,side_frame,table,none,pick_up_the_second_side_frame).
+robot_command(3,3,align,side_frame,none,none,align_the_side_frame_with_the_main_frame).
+robot_command(3,4,insert,side_frame,none,main_frame,insert_the_side_frame_into_the_main_frame).
+robot_command(3,5,release,side_frame,none,none,release_the_side_frame_after_it_is_inserted).
+assembly_page(y).
 step(4).
-repetition(4,2).
-robot_command(4,1,pick,screw_medium,table,none,pick_up_one_of_the_2_medium_screws).
-robot_command(4,2,move,screw_medium,table,screw_hole,move_the_screw_to_the_frame_hole).
-robot_command(4,3,align,screw_medium,none,screw_hole,align_the_screw_with_the_hole).
-robot_command(4,4,insert,screw_medium,none,screw_hole,insert_the_screw_into_the_frame).
-robot_command(4,5,pick,allen_key,table,none,pick_up_the_allen_key).
-robot_command(4,6,move,allen_key,table,screw_head,bring_the_allen_key_to_the_screw_head).
-robot_command(4,7,align,allen_key,none,screw_head,align_the_allen_key_with_the_screw_head).
-robot_command(4,8,rotate,allen_key,none,none,rotate_to_tighten).
-robot_command(4,9,release,allen_key,none,none,release_the_allen_key).
-
+repetition(4,4).
+robot_command(4,1,pick,screw_long,table,none,pick_up_one_of_the_4_long_screwspart_113152).
+robot_command(4,2,move,screw_long,table,hole,move_the_long_screw_to_the_pre_drilled_hole_on_the_frame).
+robot_command(4,3,align,screw_long,none,none,align_the_long_screw_with_the_hole).
+robot_command(4,4,insert,screw_long,none,hole,insert_the_long_screw_into_the_hole).
+robot_command(4,5,pick,tool,table,none,pick_up_the_allen_keypart_100001).
+robot_command(4,6,move,tool,table,screw_long,move_the_allen_key_to_the_head_of_the_long_screw).
+robot_command(4,7,align,tool,none,none,descriptionalign_the_allen_key_with_the_screw_head).
+robot_command(4,8,rotate,tool,none,none,rotate_the_allen_key_to_tighten_the_long_screw).
+robot_command(4,9,release,tool,none,none,release_the_allen_key).
+robot_command(4,10,release,screw_long,none,none,release_the_long_screw).
+assembly_page(y).
 step(5).
-repetition(5,4).
-robot_command(5,1,pick,screw,table,none,pick_up_one_of_the_4_wood_screws).
-robot_command(5,2,move,screw,table,screw_hole,move_the_screw_to_the_hole_on_the_frame).
-robot_command(5,3,align,screw,none,screw_hole,align_the_screw_with_the_hole).
-robot_command(5,4,insert,screw,none,screw_hole,insert_the_screw).
-robot_command(5,5,rotate,screw,none,none,rotate_the_screw_to_tighten_it).
-robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
+repetition(5,2).
+robot_command(5,1,pick,screw_medium,table,none,pick_up_one_of_the_medium_screws_part_106581).
+robot_command(5,2,move,screw_medium,table,hole,move_the_medium_screw_to_the_pre_drilled_hole_on_the_frame).
+robot_command(5,3,align,screw_medium,none,none,align_the_medium_screw_with_the_hole).
+robot_command(5,4,insert,screw_medium,none,hole,insert_the_medium_screw_into_the_hole).
+robot_command(5,5,pick,tool,table,none,pick_up_the_allen_key_part_100001).
+robot_command(5,6,move,tool,table,screw_medium,move_the_allen_key_to_the_head_of_the_medium_screw).
+robot_command(5,7,align,tool,none,none,align_the_allen_key_with_the_screw_head).
+robot_command(5,8,rotate,tool,none,none,rotate_the_allen_key_to_tighten_the_medium_screw).
+robot_command(5,9,release,tool,none,none,release_the_allen_key).
+robot_command(5,10,release,screw_medium,none,none,release_the_medium_screw).
+assembly_page(y).
+step(6).
+repetition(6,4).
+robot_command(6,1,pick,screw_long,table,none,pick_up_one_of_the_4_screws_part_10046802).
+robot_command(6,2,move,screw_long,table,hole,move_the_screw_to_the_pre_drilled_hole_on_the_frame).
+robot_command(6,3,align,screw_long,none,none,align_the_screw_with_the_hole).
+robot_command(6,4,insert,screw_long,none,hole,insert_the_screw_into_the_hole).
+robot_command(6,5,pick,tool,table,none,pick_up_the_allen_key).
+robot_command(6,6,move,tool,table,screw_long,move_the_allen_key_to_the_head_of_the_screw).
+robot_command(6,7,align,tool,none,none,align_the_allen_key_with_the_screw_head).
+robot_command(6,8,rotate,tool,none,none,rotate_the_allen_key_to_tighten_the_screw).
+robot_command(6,9,release,tool,none,none,release_the_allen_key).
+robot_command(6,10,release,screw_long,none,none,release_the_screw).
+assembly_page(n).
 `;
 
 	// ── ASP Parser ─────────────────────────────────────────────────────────────
@@ -163,15 +178,79 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 			// ignore unknown facts silently
 		}
 
+		// ── Detect warning predicates ──────────────────────────────────────────
+		const WARNING_PREDICATES: { pattern: RegExp; label: string }[] = [
+			{ pattern: /#show\s+missing_commands\s*\/\s*1\s*\./,      label: 'missing_commands/1' },
+			{ pattern: /#show\s+orders_incomplete\s*\/\s*2\s*\./,     label: 'orders_incomplete/2' },
+			{ pattern: /#show\s+step_not_existent\s*\/\s*1\s*\./,     label: 'step_not_existent/1' },
+			{ pattern: /#show\s+inconsistent_repetition\s*\/\s*1\s*\./, label: 'inconsistent_repetition/1' },
+			{ pattern: /#show\s+invalid_repetition\s*\/\s*1\s*\./,    label: 'invalid_repetition/1' },
+			{ pattern: /^missing_commands\s*\(/,                       label: 'missing_commands/1' },
+			{ pattern: /^orders_incomplete\s*\(/,                      label: 'orders_incomplete/2' },
+			{ pattern: /^step_not_existent\s*\(/,                      label: 'step_not_existent/1' },
+			{ pattern: /^inconsistent_repetition\s*\(/,                label: 'inconsistent_repetition/1' },
+			{ pattern: /^invalid_repetition\s*\(/,                     label: 'invalid_repetition/1' },
+		];
+		const warnings: string[] = [];
+		const seenWarnings = new Set<string>();
+		for (const rawLine of input.split('\n')) {
+			const line = rawLine.trim();
+			for (const { pattern, label } of WARNING_PREDICATES) {
+				if (!seenWarnings.has(label) && pattern.test(line)) {
+					warnings.push(label);
+					seenWarnings.add(label);
+				}
+			}
+		}
+
+		// Deduplicate robot_commands by (step, order) — ASP solvers sometimes emit
+		// the same fact multiple times in the answer set output.
+		const seenCmdKeys = new Set<string>();
+		const dedupedRaw = raw.filter(c => {
+			const key = `${c.step}_${c.order}`;
+			if (seenCmdKeys.has(key)) return false;
+			seenCmdKeys.add(key);
+			return true;
+		});
+		raw.length = 0;
+		raw.push(...dedupedRaw);
+
 		if (raw.length === 0) throw new Error('No robot_command found.');
+
+		// Detect objectIds that appear in multiple steps without a repetition fact →
+		// suffix them with _s{step} so each step gets its own distinct scene object.
+		const objSteps = new Map<string, Set<number>>();
+		for (const c of raw) {
+			if (!objSteps.has(c.objectId)) objSteps.set(c.objectId, new Set());
+			objSteps.get(c.objectId)!.add(c.step);
+		}
+		for (const c of raw) {
+			const stepSet = objSteps.get(c.objectId)!;
+			if (stepSet.size > 1 && !repetitions[c.step]) {
+				c.objectId = `${c.objectId}_s${c.step}`;
+			}
+		}
 
 		// Expand repetitions
 		const expanded: RobotCommand[] = [];
 		const sorted = [...raw].sort((a, b) => a.step - b.step || a.order - b.order);
 		for (const c of sorted) {
 			const repCount = repetitions[c.step] ?? 1;
+			// Look up how many steps this base objectId appears in (using pre-pass map).
+			// Non-tool parts that appear in multiple steps WITH repetitions need a step
+			// suffix to avoid ID collisions (e.g. screw_long in steps 4 and 6).
+			const stepsForId = objSteps.get(c.objectId);
+			const isReusable = c.objectId.startsWith('tool') || c.objectId.includes('allen');
+			const needsStepSuffix = !isReusable && (stepsForId?.size ?? 0) > 1 && repCount > 1;
 			for (let ri = 1; ri <= repCount; ri++) {
-				const oid = repCount > 1 ? `${c.objectId}_${ri}` : c.objectId;
+				let oid: string;
+				if (needsStepSuffix) {
+					oid = `${c.objectId}_s${c.step}_${ri}`;
+				} else if (repCount > 1) {
+					oid = `${c.objectId}_${ri}`;
+				} else {
+					oid = c.objectId;
+				}
 				expanded.push({ ...c, objectId: oid, repIndex: ri, repCount });
 			}
 		}
@@ -179,7 +258,8 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 		return {
 			steps: [...steps].sort((a, b) => a - b),
 			repetitions,
-			commands: expanded.sort((a, b) => a.step - b.step || a.repIndex - b.repIndex || a.order - b.order)
+			commands: expanded.sort((a, b) => a.step - b.step || a.repIndex - b.repIndex || a.order - b.order),
+			warnings
 		};
 	}
 
@@ -286,25 +366,30 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 			// Frames snap to floor level at each end; rep1→left, rep2→right
 			case 'side_of_table_top':
 			case 'other_side_of_table_top':
+			// "main_frame" is where side frames get inserted;
+			// use step to place each frame at the correct end
+			case 'main_frame':
+				if (step === 2) return new Vector3(FRAME_X_L, 0, 0);
+				if (step === 3) return new Vector3(FRAME_X_R, 0, 0);
 				return repIndex % 2 === 1
 					? new Vector3(FRAME_X_L, 0, 0)
 					: new Vector3(FRAME_X_R, 0, 0);
-			case 'frame_hole': {
-				// 6 dowel holes: 3 on each frame, spread along Z
-				const zOffsets  = [-0.35, 0, 0.35];
-				const frameX    = repIndex <= 3 ? FRAME_X_L : FRAME_X_R;
-				const zOff      = zOffsets[(repIndex - 1) % 3];
-				// root.y = SEAT_Y - dowel_height so dowel top is flush with seat surface
-				return new Vector3(frameX, SEAT_Y - 0.18, zOff);
-			}
-			case 'screw_hole': {
-				// 4 corner bolts (step4), 2 centre bolts (step5), 4 stretcher (step6)
+			case 'frame_hole':
+			case 'hole': {
+				// Step 1: dowels sit inside the top of the side frames (below seat bottom)
+				if (step === 1) {
+					const zOffsets = [-0.35, 0, 0.35];
+					const frameX   = repIndex <= 3 ? FRAME_X_L : FRAME_X_R;
+					const zOff     = zOffsets[(repIndex - 1) % 3];
+					return new Vector3(frameX, SEAT_Y - 0.12, zOff);
+				}
+				// Steps 4–6: screws go into the frame structure, well below the seat
 				if (step === 4) {
 					const corners = [
-						new Vector3(FRAME_X_L, 0.32, -0.45),
-						new Vector3(FRAME_X_L, 0.32,  0.45),
-						new Vector3(FRAME_X_R, 0.32, -0.45),
-						new Vector3(FRAME_X_R, 0.32,  0.45),
+						new Vector3(FRAME_X_L, 0.30, -0.38),
+						new Vector3(FRAME_X_L, 0.30,  0.38),
+						new Vector3(FRAME_X_R, 0.30, -0.38),
+						new Vector3(FRAME_X_R, 0.30,  0.38),
 					];
 					return corners[(repIndex - 1) % 4];
 				}
@@ -315,55 +400,162 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 					];
 					return mid[(repIndex - 1) % 2];
 				}
-				// step 6
+				// step 6: lower stretcher screws
 				const outer = [
-					new Vector3(FRAME_X_L, 0.08, -0.38),
-					new Vector3(FRAME_X_L, 0.08,  0.38),
-					new Vector3(FRAME_X_R, 0.08, -0.38),
-					new Vector3(FRAME_X_R, 0.08,  0.38),
+					new Vector3(FRAME_X_L, 0.10, -0.38),
+					new Vector3(FRAME_X_L, 0.10,  0.38),
+					new Vector3(FRAME_X_R, 0.10, -0.38),
+					new Vector3(FRAME_X_R, 0.10,  0.38),
 				];
 				return outer[(repIndex - 1) % 4];
 			}
-			case 'screw_head': {
-				// Allen key follows the screw placed in the same step/repetition
-				return targetPos('screw_hole', repIndex, step).add(new Vector3(0, 0.08, 0));
+			case 'screw_hole': {
+				if (step === 4) {
+					const corners = [
+						new Vector3(FRAME_X_L, 0.30, -0.38),
+						new Vector3(FRAME_X_L, 0.30,  0.38),
+						new Vector3(FRAME_X_R, 0.30, -0.38),
+						new Vector3(FRAME_X_R, 0.30,  0.38),
+					];
+					return corners[(repIndex - 1) % 4];
+				}
+				if (step === 5) {
+					const mid = [
+						new Vector3(FRAME_X_L, 0.18, 0),
+						new Vector3(FRAME_X_R, 0.18, 0),
+					];
+					return mid[(repIndex - 1) % 2];
+				}
+				const outer = [
+					new Vector3(FRAME_X_L, 0.10, -0.38),
+					new Vector3(FRAME_X_L, 0.10,  0.38),
+					new Vector3(FRAME_X_R, 0.10, -0.38),
+					new Vector3(FRAME_X_R, 0.10,  0.38),
+				];
+				return outer[(repIndex - 1) % 4];
 			}
-			default:
-				return new Vector3(0, 0.5, 0); // generic safe fallback
+			// Allen key moves to the screw head (slightly above the screw hole)
+			case 'screw_head':
+			case 'screw_long':
+			case 'screw_medium':
+			case 'screw':
+				return targetPos('hole', repIndex, step).add(new Vector3(0, 0.08, 0));
+			default: {
+				// Generic hole_N pattern (e.g. hole_1, hole_2) — lay parts out in a grid
+				// derived from the program's actual steps and repetitions.
+				const holeMatch = location.match(/^hole[_-]?(\d+)$/i);
+				if (holeMatch) {
+					const holeNum  = +holeMatch[1] - 1;                    // 0-indexed
+					const stepIdx  = program.steps.indexOf(step);
+					const stepSpan = Math.max(program.steps.length - 1, 1);
+					// Steps spread along bench length (X), clamped within frames
+					const x = FRAME_X_L * 0.9 + (stepIdx / stepSpan) * (FRAME_X_R - FRAME_X_L) * 0.9;
+					// Reps spread along bench width (Z)
+					const maxRep  = program.repetitions[step] ?? 1;
+					const zCenter = maxRep > 1 ? ((repIndex - 1) / (maxRep - 1) - 0.5) * 0.80 : 0;
+					// Each hole within a rep is slightly offset along Z
+					const z = zCenter + (holeNum - 0.5) * 0.14;
+					return new Vector3(x, SEAT_Y - 0.12, z);
+				}
+				return new Vector3(0, 0.5, 0); // ultimate fallback
+			}
 		}
 	}
 
-	// Initial (pre-assembly) positions for each part kind
-	function initialPos(kind: PartKind, index: number): Vector3 {
-		switch (kind) {
-			case 'dowel': {
-				const col = index % 6, row = Math.floor(index / 6);
-				return new Vector3(-3.0 + col * 0.28, 0.22, -1.8 + row * 0.4);
+	// ── Supply system ─────────────────────────────────────────────────────────
+	// Each part kind has a fixed supply point. Working objects always spawn there
+	// (stacked with a tiny Y offset), making it look like an infinite parts tray.
+	const SUPPLY: Partial<Record<PartKind, Vector3>> = {
+		dowel:        new Vector3(-3.4, 0,  -0.8),
+		side_frame:   new Vector3(-3.4, 0,   1.4),
+		screw_long:   new Vector3( 3.4, 0,  -0.8),
+		screw_medium: new Vector3( 3.4, 0,   0.0),
+		screw:        new Vector3( 3.4, 0,   0.8),
+		allen_key:    new Vector3( 3.4, 0,   1.6),
+		panel:        new Vector3( 0.0, 0,  -3.0),
+		leg:          new Vector3(-1.0, 0,  -3.0),
+		barrel_nut:   new Vector3( 1.0, 0,  -3.0),
+		washer:       new Vector3( 2.0, 0,  -3.0),
+		nut:          new Vector3( 3.0, 0,  -3.0),
+	};
+
+	function supplyPoint(kind: PartKind): Vector3 {
+		return (SUPPLY[kind] ?? new Vector3(0, 0, 3.5)).clone();
+	}
+
+	// Nodes for supply tray display (rebuilt on each populateScene)
+	const supplyTrayNodes: TransformNode[] = [];
+
+	// Permanent placed-part clones — created when a working mesh is respawned at supply.
+	// Cleared on reset/populateScene so they don't accumulate across resets.
+	const placedClones: TransformNode[] = [];
+
+	function clearPlacedClones() {
+		for (const n of placedClones) {
+			n.getChildMeshes().forEach(m => { m.material?.dispose(); m.dispose(); });
+			n.dispose();
+		}
+		placedClones.length = 0;
+	}
+
+	function buildSupplyTrays() {
+		// Dispose previous
+		for (const n of supplyTrayNodes) {
+			n.getChildMeshes().forEach(m => { m.material?.dispose(); m.dispose(); });
+			n.dispose();
+		}
+		supplyTrayNodes.length = 0;
+
+		const isMetalKind = (k: string) =>
+			k.includes('screw') || k === 'allen_key' || k === 'barrel_nut' || k === 'washer' || k === 'nut';
+
+		for (const [kindStr, centre] of Object.entries(SUPPLY) as [PartKind, Vector3][]) {
+			const kind = kindStr as PartKind;
+			const root = new TransformNode(`supply_tray_${kind}`, scene!);
+			root.position = centre.clone();
+			supplyTrayNodes.push(root);
+
+			// Tray platform
+			const trayMat = makeMat(`trayMat_${kind}`, '#1e1e2e');
+			const tray = MeshBuilder.CreateBox(`tray_${kind}`, { width: 0.58, height: 0.035, depth: 0.58 }, scene!);
+			tray.material = trayMat;
+			tray.parent = root;
+			tray.position.y = -0.018;
+			tray.receiveShadows = true;
+
+			// 3 ghost parts stacked on the tray to signal "infinite stock"
+			const ghostColor = isMetalKind(kind) ? '#707080' : '#a07848';
+			const ghostMat = makeMat(`ghostMat_${kind}`, ghostColor);
+			ghostMat.alpha = 0.5;
+
+			for (let i = 0; i < 3; i++) {
+				const xOff = (i - 1) * 0.10;
+				const yOff = 0.04 + i * 0.012;
+				const zOff = (i % 2) * 0.06 - 0.03;
+
+				let ghost: Mesh;
+				if (kind === 'dowel') {
+					ghost = MeshBuilder.CreateCylinder(`ghost_${kind}_${i}`, { height: 0.10, diameter: 0.028, tessellation: 10 }, scene!);
+					ghost.position = new Vector3(xOff, yOff + 0.05, zOff);
+				} else if (kind === 'screw_long') {
+					ghost = MeshBuilder.CreateCylinder(`ghost_${kind}_${i}`, { height: 0.12, diameter: 0.018, tessellation: 8 }, scene!);
+					ghost.position = new Vector3(xOff, yOff + 0.06, zOff);
+				} else if (kind === 'screw_medium' || kind === 'screw') {
+					ghost = MeshBuilder.CreateCylinder(`ghost_${kind}_${i}`, { height: 0.09, diameter: 0.015, tessellation: 8 }, scene!);
+					ghost.position = new Vector3(xOff, yOff + 0.045, zOff);
+				} else if (kind === 'allen_key') {
+					ghost = MeshBuilder.CreateBox(`ghost_${kind}_${i}`, { width: 0.22, height: 0.022, depth: 0.022 }, scene!);
+					ghost.position = new Vector3(xOff + 0.11, yOff + 0.011, zOff);
+				} else if (kind === 'side_frame') {
+					ghost = MeshBuilder.CreateBox(`ghost_${kind}_${i}`, { width: 0.12, height: 0.45, depth: 0.09 }, scene!);
+					ghost.position = new Vector3(xOff, yOff + 0.225, zOff);
+				} else {
+					ghost = MeshBuilder.CreateBox(`ghost_${kind}_${i}`, { size: 0.09 }, scene!);
+					ghost.position = new Vector3(xOff, yOff + 0.045, zOff);
+				}
+				ghost.material = ghostMat;
+				ghost.parent = root;
 			}
-			case 'side_frame':
-				// Staged to the front sides, clearly in camera view
-				return new Vector3(index === 0 ? -2.2 : 2.2, 0, 1.6);
-			case 'panel':
-			case 'leg': {
-				const col = index % 3;
-				return new Vector3(-2.0 + col * 0.5, 0.1, 1.8);
-			}
-			case 'screw_long':
-			case 'screw_medium':
-			case 'screw': {
-				const col = index % 5, row = Math.floor(index / 5);
-				return new Vector3(2.2 + col * 0.28, 0.22, -1.4 + row * 0.35);
-			}
-			case 'barrel_nut':
-			case 'washer':
-			case 'nut': {
-				const col = index % 6;
-				return new Vector3(2.2 + col * 0.22, 0.18, 0.4);
-			}
-			case 'allen_key':
-				return new Vector3(3.2, 0.22, 0.8);
-			default:
-				return new Vector3(3.0, 0.22, index * 0.4);
 		}
 	}
 
@@ -379,11 +571,11 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 			case 'dowel': {
 				mat = makeMat(`mat_${id}`, MAT_WOOD);
 				const cyl = MeshBuilder.CreateCylinder(`${id}_cyl`, {
-					height: 0.18, diameter: 0.045, tessellation: 10
+					height: 0.10, diameter: 0.028, tessellation: 10
 				}, scene!);
 				cyl.material = mat;
 				cyl.parent = root;
-				cyl.position.y = 0.09;
+				cyl.position.y = 0.05;
 				shadowGen?.addShadowCaster(cyl);
 				meshes.push(cyl);
 				break;
@@ -392,9 +584,9 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 			case 'screw_medium':
 			case 'screw': {
 				mat = makeMat(`mat_${id}`, MAT_METAL);
-				const heights = { screw_long: 0.22, screw_medium: 0.15, screw: 0.10 } as Record<string,number>;
-				const diams   = { screw_long: 0.030, screw_medium: 0.026, screw: 0.020 } as Record<string,number>;
-				const h = heights[kind] ?? 0.10, d = diams[kind] ?? 0.020;
+				const heights = { screw_long: 0.12, screw_medium: 0.09, screw: 0.07 } as Record<string,number>;
+				const diams   = { screw_long: 0.018, screw_medium: 0.015, screw: 0.012 } as Record<string,number>;
+				const h = heights[kind] ?? 0.07, d = diams[kind] ?? 0.012;
 				const shaft = MeshBuilder.CreateCylinder(`${id}_shaft`, { height: h, diameter: d, tessellation: 8 }, scene!);
 				shaft.material = mat;
 				shaft.parent = root;
@@ -402,7 +594,7 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 				const head = MeshBuilder.CreateCylinder(`${id}_head`, { height: d * 0.8, diameter: d * 2.2, tessellation: 8 }, scene!);
 				head.material = mat;
 				head.parent = root;
-				head.position.y = h + 0.03;
+				head.position.y = h + 0.015;
 				shadowGen?.addShadowCaster(shaft);
 				shadowGen?.addShadowCaster(head);
 				meshes.push(shaft, head);
@@ -505,7 +697,7 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 			}
 		}
 
-		return { id, root, meshes, currentPos: pos.clone(), mat };
+		return { id, root, meshes, currentPos: pos.clone(), mat, placed: false };
 	}
 
 	// ── Build the static bench seat panel & floor ──────────────────────────────
@@ -568,6 +760,7 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 
 	// ── Initialise all part objects from the parsed commands ───────────────────
 	function populateScene() {
+		clearPlacedClones();
 		// Clear previous — dispose meshes AND materials to avoid stale state
 		for (const obj of sceneObjects.values()) {
 			obj.root.getChildMeshes().forEach(m => { m.material?.dispose(); m.dispose(); });
@@ -576,7 +769,7 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 		}
 		sceneObjects.clear();
 
-		// Count occurrences of each base kind for initial-position indexing
+		// All instances of the same kind stack at the supply point with a tiny Y offset
 		const kindCount: Record<string, number> = {};
 		const seenIds = new Set<string>();
 
@@ -588,10 +781,13 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 			const idx = kindCount[kind] ?? 0;
 			kindCount[kind] = idx + 1;
 
-			const pos = initialPos(kind, idx);
+			// Stack parts at the supply point (tiny Y offset keeps them selectable)
+			const pos = supplyPoint(kind).add(new Vector3(0, 0.04 + idx * 0.015, 0));
 			const obj = buildPartMesh(c.objectId, kind, pos);
 			sceneObjects.set(c.objectId, obj);
 		}
+
+		buildSupplyTrays();
 	}
 
 	// ── Animation helpers ──────────────────────────────────────────────────────
@@ -663,9 +859,29 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 
 		switch (c.cmd) {
 			case 'pick': {
+				const pickKind = inferKind(obj.id);
+				if (obj.placed) {
+					// Freeze the placed visual in the scene as a permanent clone,
+					// then silently teleport the working mesh back to the supply tray.
+					const frozenRoot = new TransformNode(`frozen_${obj.id}_${placedClones.length}`, scene!);
+					frozenRoot.position = obj.root.position.clone();
+					frozenRoot.rotation = obj.root.rotation.clone();
+					const frozenMat = makeMat(`frozenMat_${placedClones.length}`, MAT_DONE);
+					frozenMat.emissiveColor = hexToColor3(MAT_DONE).scale(0.25);
+					for (const m of obj.meshes) {
+						const fm = m.clone(`${m.name}_frozen`, frozenRoot)!;
+						fm.material = frozenMat;
+					}
+					placedClones.push(frozenRoot);
+
+					const sp = supplyPoint(pickKind);
+					obj.root.position = sp.clone();
+					obj.currentPos    = sp.clone();
+					obj.placed        = false;
+					highlightObj(obj, false, false);
+				}
 				highlightObj(obj, true);
 				await moveGripper(obj.currentPos.add(new Vector3(0, 0.12, 0)));
-				// Close gripper
 				if (gripperL) gripperL.position.x = -0.055;
 				if (gripperR) gripperR.position.x =  0.055;
 				heldId = c.objectId;
@@ -675,11 +891,37 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 			case 'align': {
 				if (!obj) break;
 				const dest = (c.to !== 'none' && c.to)
-					? targetPos(c.to, c.repIndex, c.step).add(new Vector3(0, 0.15, 0))
+					? targetPos(c.to, c.repIndex, c.step).add(new Vector3(0, 0.03, 0))
 					: obj.currentPos.clone();
-				await moveGripper(dest.add(new Vector3(0, 0.12, 0)));
-				const from = obj.currentPos.clone();
-				await animateMove(obj.root, from, dest, 600);
+				const objFrom = obj.currentPos.clone();
+				if (heldId === c.objectId && gripperNode) {
+					// Move gripper and held object together: rise → travel → descend
+					const gripFrom = gripperNode.position.clone();
+					const gripTo   = dest.add(new Vector3(0, 0.12, 0));
+					const riseY    = Math.max(gripFrom.y, gripTo.y) + 0.4;
+					const phases: [Vector3, Vector3, Vector3, Vector3, number][] = [
+						[gripFrom, new Vector3(gripFrom.x, riseY, gripFrom.z),
+						 objFrom,  new Vector3(objFrom.x,  riseY - 0.12, objFrom.z),  180],
+						[new Vector3(gripFrom.x, riseY, gripFrom.z), new Vector3(gripTo.x, riseY, gripTo.z),
+						 new Vector3(objFrom.x, riseY - 0.12, objFrom.z), new Vector3(dest.x, riseY - 0.12, dest.z), 280],
+						[new Vector3(gripTo.x, riseY, gripTo.z), gripTo,
+						 new Vector3(dest.x, riseY - 0.12, dest.z), dest, 180],
+					];
+					for (const [gA, gB, oA, oB, dur] of phases) {
+						const nSteps = Math.max(1, Math.round(dur / 16));
+						for (let i = 0; i <= nSteps; i++) {
+							if (!isPlaying && i > 0) return;
+							const t = ease(i / nSteps);
+							gripperNode.position = lerp(gA, gB, t);
+							obj.root.position    = lerp(oA, oB, t);
+							await sleep(16);
+						}
+					}
+					gripperNode.position = gripTo.clone();
+				} else {
+					await moveGripper(dest.add(new Vector3(0, 0.12, 0)));
+					await animateMove(obj.root, objFrom, dest, 600);
+				}
 				obj.currentPos = dest.clone();
 				break;
 			}
@@ -690,14 +932,26 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 					? targetPos(c.to, c.repIndex, c.step)
 					: obj.currentPos.clone();
 				const from = obj.currentPos.clone();
-				await animateMove(obj.root, from, dest, 500);
-				obj.currentPos = dest.clone();
-				highlightObj(obj, false, true);
-				// Snap gripper up
-				if (gripperNode) {
-					const up = gripperNode.position.add(new Vector3(0, 0.4, 0));
-					await animateMove(gripperNode, gripperNode.position.clone(), up, 250);
+				if (heldId === c.objectId && gripperNode) {
+					// Descend gripper and object together to the final position
+					const gripFrom = gripperNode.position.clone();
+					const gripTo   = dest.add(new Vector3(0, 0.12, 0));
+					const nSteps   = Math.max(1, Math.round(500 / 16));
+					for (let i = 0; i <= nSteps; i++) {
+						if (!isPlaying && i > 0) return;
+						const t = ease(i / nSteps);
+						obj.root.position    = lerp(from, dest, t);
+						gripperNode.position = lerp(gripFrom, gripTo, t);
+						await sleep(16);
+					}
+					obj.root.position    = dest.clone();
+					gripperNode.position = gripTo.clone();
+				} else {
+					await animateMove(obj.root, from, dest, 500);
 				}
+				obj.currentPos = dest.clone();
+				obj.placed = true;
+				highlightObj(obj, false, true);
 				break;
 			}
 			case 'rotate': {
@@ -713,11 +967,12 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 				// Tools (allen_key) return to the table rest area; parts stay done
 				const kind = inferKind(obj.id);
 				if (kind === 'allen_key') {
-					const toolRest = initialPos('allen_key', 0);
+					const toolRest = supplyPoint('allen_key');
 					await animateMove(obj.root, obj.currentPos.clone(), toolRest, 500);
 					obj.currentPos = toolRest.clone();
 					highlightObj(obj, false, false);
 				} else {
+					obj.placed = true;
 					highlightObj(obj, false, true);
 				}
 				// Retract gripper upward
@@ -946,6 +1201,23 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 		<h2 class="sidebar-title">ASP Input</h2>
 		<textarea class="asp-editor" bind:value={aspText} spellcheck="false"></textarea>
 		{#if parseError}<div class="parse-error">{parseError}</div>{/if}
+		{#if program.warnings.length > 0}
+			<div class="asp-warnings">
+				<div class="warn-header">
+					<span class="warn-icon">⚠</span>
+					<span class="warn-title">Incomplete Plan</span>
+				</div>
+				<p class="warn-message">
+					This generation seems to contain missing information.
+					An incomplete or damaged build might appear.
+				</p>
+				<div class="warn-predicates">
+					{#each program.warnings as w}
+						<span class="warn-tag">{w}</span>
+					{/each}
+				</div>
+			</div>
+		{/if}
 		<button class="apply-btn" onclick={applyAsp}>Apply</button>
 	</aside>
 </div>
@@ -1136,6 +1408,59 @@ robot_command(5,6,release,screw,none,none,release_the_screw_after_tightening).
 		color: #ff8888;
 		font-size: 0.7rem;
 		padding: 6px 12px;
+	}
+
+	.asp-warnings {
+		background: linear-gradient(135deg, #2e1a00 0%, #1e1200 100%);
+		border-top: 2px solid #c07800;
+		padding: 14px 14px 12px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.warn-header {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.warn-icon {
+		font-size: 1.1rem;
+		line-height: 1;
+		flex-shrink: 0;
+	}
+
+	.warn-title {
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: #f0a800;
+	}
+
+	.warn-message {
+		margin: 0;
+		font-size: 0.74rem;
+		line-height: 1.5;
+		color: #c89848;
+	}
+
+	.warn-predicates {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 5px;
+		margin-top: 2px;
+	}
+
+	.warn-tag {
+		background: #3a2200;
+		border: 1px solid #7a4800;
+		border-radius: 4px;
+		color: #e09030;
+		font-family: 'JetBrains Mono', 'Fira Code', monospace;
+		font-size: 0.62rem;
+		padding: 2px 6px;
 	}
 
 	.apply-btn {
