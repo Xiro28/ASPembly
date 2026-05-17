@@ -10,7 +10,7 @@
 
 <div class="manual-page">
   <div class="manual-header">
-    <h1>Manuale</h1>
+    <h1>Manual</h1>
 
     <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
       Open PDF
