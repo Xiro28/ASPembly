@@ -47,7 +47,7 @@
 	}
 
 	const DEFAULT_ASP = `
-assembly_page(n).
+	assembly_page(n).
 assembly_page(n).
 assembly_page(y).
 step(1).
